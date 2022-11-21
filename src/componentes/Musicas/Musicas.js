@@ -5,7 +5,7 @@ import {
   ContainerInputs,
   ContainerMusicas,
   InputMusica,
-  Musica
+  Musica,
 } from "./styled";
 
 const musicasLocal = [
@@ -13,20 +13,20 @@ const musicasLocal = [
     artist: "Artista 1",
     id: "1",
     name: "Musica1",
-    url: "http://spoti4.future4.com.br/1.mp3"
+    url: "http://spoti4.future4.com.br/1.mp3",
   },
   {
     artist: "Artista 2",
     id: "2",
     name: "Musica2",
-    url: "http://spoti4.future4.com.br/2.mp3"
+    url: "http://spoti4.future4.com.br/2.mp3",
   },
   {
     artist: "Artista 3",
     id: "3",
     name: "Musica3",
-    url: "http://spoti4.future4.com.br/3.mp3"
-  }
+    url: "http://spoti4.future4.com.br/3.mp3",
+  },
 ];
 
 export default function Musicas(props) {
@@ -36,70 +36,80 @@ export default function Musicas(props) {
   const [inputUrl, setInputUrl] = useState("");
   const header = {
     headers: {
-      Authorization: "bruno-maschietto-ammal"
-    }
+      Authorization: "bruno-maschietto-ammal",
+    },
   };
-  const getPlaylistTracks = () => {
-    axios
-      .get(
+  const getPlaylistTracks = async () => {
+    try {
+      const response = await axios.get(
         `https://us-central1-labenu-apis.cloudfunctions.net/labefy/playlists/${props.playlist.id}/tracks
       `,
         header
-      )
-      .then((response) => {
-        console.log(response.data.result.tracks);
-        setMusicas(response.data.result.tracks);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
+      );
+      console.log(response.data.result.tracks);
+      setMusicas(response.data.result.tracks);
+    } catch (error) {
+      console.log(error);
+    }
   };
   useEffect(() => {
     getPlaylistTracks();
   }, []);
 
-  const addTrackToPlaylist = () => {
+  const addTrackToPlaylist = async () => {
     const body = {
       artist: inputArtista,
       name: inputMusica,
-      url: inputUrl
+      url: inputUrl,
     };
     const header = {
       headers: {
-        Authorization: "bruno-maschietto-ammal"
-      }
+        Authorization: "bruno-maschietto-ammal",
+      },
     };
-    axios
-      .post(
+    try {
+      const response = await axios.post(
         `https://us-central1-labenu-apis.cloudfunctions.net/labefy/playlists/${props.playlist.id}/tracks
         `,
         body,
         header
-      )
-      .then((response) => {
-        console.log(response.data.result.tracks);
-        getPlaylistTracks();
-      })
-      .catch((error) => {
-        console.log(error.mensage);
-      });
+      );
+      console.log(response.data.result.tracks);
+      getPlaylistTracks();
+    } catch (error) {
+      console.log(error.response);
+    }
   };
-  const deleteTrack = (id) => {
-    axios.delete(`https://us-central1-labenu-apis.cloudfunctions.net/labefy/playlists/${props.playlist.id}/tracks/${id}
-    `, header
-     )
-     .then((response) => {
-        console.log(response.data)
-        getPlaylistTracks();
-     })
-     .catch((error) => {
-        console.log(error.mensage)
-     })
-  }
+  const deleteTrack = async (id) => {
+    try {
+      const response = await axios.delete(
+        `https://us-central1-labenu-apis.cloudfunctions.net/labefy/playlists/${props.playlist.id}/tracks/${id}
+    `,
+        header
+      );
+      console.log(response.data);
+      getPlaylistTracks();
+    } catch (error) {
+      console.log(error.mensage);
+    }
+  };
+  const deletePlaylist = async (id) => {
+    try {
+      const response = await axios.delete(
+        `https://us-central1-labenu-apis.cloudfunctions.net/labefy/playlists/${props.playlist.id}`,
+        header
+      );
+      console.log(response.data);
+      props.getAllPlaylists();
+    } catch (error) {
+      console.log(error.mensage);
+    }
+  };
 
   return (
     <ContainerMusicas>
       <h2>{props.playlist.name}</h2>
+      <button onClick={()=> deletePlaylist(props.playlist.id)}>X</button>
       {musicas.map((musica) => {
         return (
           <Musica key={musica.id}>
@@ -107,7 +117,7 @@ export default function Musicas(props) {
               {musica.name} - {musica.artist}
             </h3>
             <audio src={musica.url} controls />
-            <button onClick={()=> deleteTrack(musica.id)}>X</button>
+            <button onClick={() => deleteTrack(musica.id)}>X</button>
           </Musica>
         );
       })}
